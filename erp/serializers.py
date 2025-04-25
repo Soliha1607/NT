@@ -1,0 +1,68 @@
+from rest_framework import serializers
+from erp.models import *
+
+class CategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Category
+        fields = '__all__'
+
+
+class CourseSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Course
+        fields = '__all__'
+
+
+class ModuleSerializer(serializers.ModelSerializer):
+    get_video = serializers.SerializerMethodField()
+    get_students = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Module
+        fields = ["id", "title", "is_given", "get_video", "get_students"]
+
+    def get_video(self, instance):
+        videos = instance.videos.all()
+        return [video.video.url for video in videos]
+
+    def get_students(self, instance):
+        return instance.group.students.count()
+
+
+class GroupSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Group
+        fields = ["id", "name", "started_at", "ended_at", "status"]
+
+
+class HomeworkSerializer(serializers.ModelSerializer):
+    file_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Homework
+        fields = ["id", "overview", "file_url", "deadline"]
+
+    def get_file_url(self, instance):
+        return instance.file.url if instance.file else None
+
+
+class StudentSerializer(serializers.ModelSerializer):
+    image_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Student
+        fields = ["id", "first_name", "last_name", "gender", "phone_number", "password", "image_url", "student_code"]
+
+    def get_image_url(self, instance):
+        return instance.image.url if instance.image else None
+
+
+class TeacherSerializer(serializers.ModelSerializer):
+    image_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Teacher
+        fields = ["id", "first_name", "last_name", "phone_number", "password", "image_url", "username"]
+
+    def get_image_url(self, instance):
+        return instance.image.url if instance.image else None
