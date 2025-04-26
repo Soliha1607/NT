@@ -54,7 +54,11 @@ class StudentSerializer(serializers.ModelSerializer):
         fields = ["id", "first_name", "last_name", "gender", "phone_number", "password", "image_url", "student_code"]
 
     def get_image_url(self, instance):
-        return instance.image.url if instance.image else None
+        request = self.context.get('request')
+        if instance.image and request:
+            return request.build_absolute_uri(instance.image.url)
+        return None
+
 
 
 class TeacherSerializer(serializers.ModelSerializer):
@@ -62,6 +66,17 @@ class TeacherSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Teacher
+        fields = ["id", "first_name", "last_name", "phone_number", "password", "image_url", "username"]
+
+    def get_image_url(self, instance):
+        return instance.image.url if instance.image else None
+
+
+class SupportSerializer(serializers.ModelSerializer):
+    image_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Support
         fields = ["id", "first_name", "last_name", "phone_number", "password", "image_url", "username"]
 
     def get_image_url(self, instance):

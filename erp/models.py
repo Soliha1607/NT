@@ -29,6 +29,16 @@ class Teacher(models.Model):
     def __str__(self):
         return self.username
 
+class Support(models.Model):
+    first_name = models.CharField(max_length=30)
+    last_name = models.CharField(max_length=30)
+    phone_number = models.CharField(max_length=20)
+    password = models.CharField(max_length=255)
+    image = models.ImageField(upload_to='support/images/', default='images/default.png')
+    username = models.CharField(max_length=30, unique=True)
+
+    def __str__(self):
+        return self.username
 
 class Category(models.Model):
     name = models.CharField(max_length=50)
@@ -59,6 +69,7 @@ class Group(models.Model):
                                on_delete=models.CASCADE,
                                related_name='groups')
     teacher = models.ForeignKey(Teacher, on_delete=models.SET_NULL, related_name='groups', null=True)
+    support = models.ForeignKey(Support, on_delete=models.SET_NULL, related_name='groups', null=True)
     started_at = models.DateTimeField()
     ended_at = models.DateTimeField()
     status = models.CharField(choices=StatusChoice.choices, default=StatusChoice.NOT_STARTED.value)

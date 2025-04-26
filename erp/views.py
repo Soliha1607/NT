@@ -5,8 +5,19 @@ from django.shortcuts import get_object_or_404
 
 
 class CategoryViewSet(generics.ListAPIView):
-    queryset = Category.objects.all()
     serializer_class = CategorySerializer
+
+    def get_queryset(self):
+        course_id = self.kwargs.get('course_id')
+        if course_id:
+            return Category.objects.filter(courses__id=course_id)
+        return Category.objects.all()
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context.update({"request": self.request})
+        return context
+
 
 
 class CourseViewSet(generics.ListAPIView):
@@ -57,4 +68,9 @@ class StudentViewSet(ModelViewSet):
 
 class TeacherViewSet(ModelViewSet):
     queryset = Teacher.objects.all()
+    serializer_class = TeacherSerializer
+
+
+class SupportViewSet(ModelViewSet):
+    queryset = Support.objects.all()
     serializer_class = TeacherSerializer
