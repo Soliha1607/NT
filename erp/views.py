@@ -21,7 +21,7 @@ class CategoryViewSet(generics.ListAPIView):
 
 
 class CourseViewSet(generics.ListAPIView):
-    queryset = Course.objects.all()
+    queryset = Course.objects.filter()
     serializer_class = CourseSerializer
 
     def get_queryset(self):
