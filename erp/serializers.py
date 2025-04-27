@@ -14,19 +14,23 @@ class CourseSerializer(serializers.ModelSerializer):
 
 
 class ModuleSerializer(serializers.ModelSerializer):
-    get_video = serializers.SerializerMethodField()
-    get_students = serializers.SerializerMethodField()
+    video = serializers.SerializerMethodField()
+    students = serializers.SerializerMethodField()
 
     class Meta:
         model = Module
-        fields = ["id", "title", "is_given", "get_video", "get_students"]
+        fields = ["id", "title", "is_given", "video", "students"]
 
     def get_video(self, instance):
         videos = instance.videos.all()
-        return [video.video.url for video in videos]
+        if videos.exists():
+            return [video.video.url for video in videos]
+        return None  # yoki return []
 
     def get_students(self, instance):
-        return instance.group.students.count()
+        if instance.group and instance.group.students.exists():
+            return instance.group.students.count()
+        return 0
 
 
 class GroupSerializer(serializers.ModelSerializer):

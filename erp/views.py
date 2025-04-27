@@ -49,12 +49,13 @@ class ModuleViewSet(generics.ListAPIView):
 
 
 class HomeworkViewSet(ModelViewSet):
-    queryset = Homework.objects.all()
     serializer_class = HomeworkSerializer
 
     def get_queryset(self):
-        module_id = self.kwargs.get("module_id")
-        return get_object_or_404(Module, pk=module_id)
+        module_id = self.request.query_params.get('module_id')
+        if module_id:
+            return Homework.objects.filter(module_id=module_id)
+        return Homework.objects.all()
 
 
 class StudentViewSet(ModelViewSet):
