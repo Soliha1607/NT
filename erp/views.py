@@ -1,7 +1,10 @@
 from rest_framework import generics
+from rest_framework.generics import ListCreateAPIView,RetrieveUpdateDestroyAPIView
 from rest_framework.viewsets import ModelViewSet
 from erp.serializers import *
-from rest_framework.permissions import AllowAny
+from erp.permissions import *
+from erp.models import Category,Course,Student,Homework,Video
+
 
 class CategoryViewSet(generics.ListAPIView):
     serializer_class = CategorySerializer
@@ -40,7 +43,6 @@ class GroupViewSet(generics.ListAPIView):
 class ModuleViewSet(generics.ListAPIView):
     queryset = Module.objects.all()
     serializer_class = ModuleSerializer
-    permission_classes = [AllowAny]
 
     def get_video(self, instance):
         videos = instance.videos.all()
@@ -76,16 +78,14 @@ class SupportViewSet(ModelViewSet):
     queryset = Support.objects.all()
     serializer_class = TeacherSerializer
 
-class VideoViewSet(generics.ListAPIView):
+
+class VideoListCReateApiView(ListCreateAPIView):
     serializer_class = VideoSerializer
+    queryset = Video.objects.all()
+    # permission_classes = [CustomerAccessPermission]
 
-    def get_queryset(self):
-        module_id = self.kwargs.get("module_id")
-        if module_id:
-            return Video.objects.filter(module_id=module_id)
-        return Video.objects.all()
 
-    def get_serializer_context(self):
-        context = super().get_serializer_context()
-        context.update({"request": self.request})
-        return context
+class VideoDetailAPiView(RetrieveUpdateDestroyAPIView):
+    serializer_class = VideoSerializer
+    queryset = Video.objects.all()
+    permission_classes = [CanEditWithinSpecialTime, IsWithinWorkingHours]

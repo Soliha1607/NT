@@ -32,6 +32,6 @@ urlpatterns = [
     path('supports/<int:pk>/', SupportViewSet.as_view({'get': 'retrieve', 'put': 'update', 'delete': 'destroy'})),
 
     #video
-    path('videos/', VideoViewSet.as_view(), name='video-list'),
-    path('videos/module/<int:module_id>/', VideoViewSet.as_view(), name='video-by-module'),
+    path('videos/', VideoListCReateApiView.as_view(), name='video-list'),
+    path('videos/<int:pk>/', VideoDetailAPiView.as_view(), name='video-by-module'),
 ]

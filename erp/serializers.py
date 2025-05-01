@@ -24,13 +24,14 @@ class ModuleSerializer(serializers.ModelSerializer):
     def get_video(self, instance):
         videos = instance.videos.all()
         if videos.exists():
-            return [video.video.url for video in videos]
-        return None  # yoki return []
+            return [video.file.url for video in videos]
+        return []
 
     def get_students(self, instance):
         if instance.group and instance.group.students.exists():
             return instance.group.students.count()
         return 0
+
 
 
 class GroupSerializer(serializers.ModelSerializer):
@@ -95,6 +96,7 @@ class VideoSerializer(serializers.ModelSerializer):
 
     def get_video_url(self, obj):
         request = self.context.get('request')
-        if obj.video and request:
-            return request.build_absolute_uri(obj.video.url)
+        if obj.file and request:
+            return request.build_absolute_uri(obj.file.url)
         return None
+
