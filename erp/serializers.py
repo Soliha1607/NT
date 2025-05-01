@@ -85,3 +85,16 @@ class SupportSerializer(serializers.ModelSerializer):
 
     def get_image_url(self, instance):
         return instance.image.url if instance.image else None
+
+class VideoSerializer(serializers.ModelSerializer):
+    video_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Video
+        fields = ['id', 'video_url', 'module']
+
+    def get_video_url(self, obj):
+        request = self.context.get('request')
+        if obj.video and request:
+            return request.build_absolute_uri(obj.video.url)
+        return None

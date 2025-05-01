@@ -1,8 +1,7 @@
 from rest_framework import generics
 from rest_framework.viewsets import ModelViewSet
 from erp.serializers import *
-from django.shortcuts import get_object_or_404
-
+from rest_framework.permissions import AllowAny
 
 class CategoryViewSet(generics.ListAPIView):
     serializer_class = CategorySerializer
@@ -41,6 +40,7 @@ class GroupViewSet(generics.ListAPIView):
 class ModuleViewSet(generics.ListAPIView):
     queryset = Module.objects.all()
     serializer_class = ModuleSerializer
+    permission_classes = [AllowAny]
 
     def get_video(self, instance):
         videos = instance.videos.all()
@@ -75,3 +75,17 @@ class TeacherViewSet(ModelViewSet):
 class SupportViewSet(ModelViewSet):
     queryset = Support.objects.all()
     serializer_class = TeacherSerializer
+
+class VideoViewSet(generics.ListAPIView):
+    serializer_class = VideoSerializer
+
+    def get_queryset(self):
+        module_id = self.kwargs.get("module_id")
+        if module_id:
+            return Video.objects.filter(module_id=module_id)
+        return Video.objects.all()
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context.update({"request": self.request})
+        return context
