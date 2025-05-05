@@ -1,102 +1,64 @@
 from rest_framework import serializers
-from erp.models import *
-
-class CategorySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Category
-        fields = '__all__'
+from erp.models import Category, Course, Student, Module, Homework, Video
 
 
-class CourseSerializer(serializers.ModelSerializer):
+class CourseModelSerializer(serializers.ModelSerializer):
+    # category_name = serializers.SerializerMethodField()
+    # test_c = serializers.CharField(source='category.name')
+
+    # def get_category_name(self,obj):
+    #     return obj.category.name
+
     class Meta:
         model = Course
         fields = '__all__'
 
 
-class ModuleSerializer(serializers.ModelSerializer):
-    video = serializers.SerializerMethodField()
-    students = serializers.SerializerMethodField()
+class CategoryModelSerializer(serializers.ModelSerializer):
+    # courses = CourseModelSerializer(many=True, read_only = True)
+    # slug = serializers.SlugField(read_only = True)
+    # course_count = serializers.IntegerField()
+    # course_count = serializers.SerializerMethodField()
 
+    # def get_course_count(self,instance):
+    #     return instance.courses.count()
+
+    class Meta:
+        model = Category
+        fields = ['id', 'name', 'slug']
+
+
+class StudentModelSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Student
+        fields = '__all__'
+
+
+class ModuleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Module
-        fields = ["id", "title", "is_given", "video", "students"]
-
-    def get_video(self, instance):
-        videos = instance.videos.all()
-        if videos.exists():
-            return [video.file.url for video in videos]
-        return []
-
-    def get_students(self, instance):
-        if instance.group and instance.group.students.exists():
-            return instance.group.students.count()
-        return 0
-
-
-
-class GroupSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Group
-        fields = ["id", "name", "started_at", "ended_at", "status"]
+        exclude = ('is_given',)
 
 
 class HomeworkSerializer(serializers.ModelSerializer):
-    file_url = serializers.SerializerMethodField()
+    deadline = serializers.DateTimeField(read_only=True)
 
     class Meta:
         model = Homework
-        fields = ["id", "overview", "file_url", "deadline"]
+        fields = '__all__'
 
-    def get_file_url(self, instance):
-        return instance.file.url if instance.file else None
+    def save(self, **kwargs):
+        homework = super().save(**kwargs)
+        module = homework.module
+        module.is_given = True
+        module.save()
+        return homework
 
-
-class StudentSerializer(serializers.ModelSerializer):
-    image_url = serializers.SerializerMethodField()
-
-    class Meta:
-        model = Student
-        fields = ["id", "first_name", "last_name", "gender", "phone_number", "password", "image_url", "student_code"]
-
-    def get_image_url(self, instance):
-        request = self.context.get('request')
-        if instance.image and request:
-            return request.build_absolute_uri(instance.image.url)
-        return None
-
-
-
-class TeacherSerializer(serializers.ModelSerializer):
-    image_url = serializers.SerializerMethodField()
-
-    class Meta:
-        model = Teacher
-        fields = ["id", "first_name", "last_name", "phone_number", "password", "image_url", "username"]
-
-    def get_image_url(self, instance):
-        return instance.image.url if instance.image else None
-
-
-class SupportSerializer(serializers.ModelSerializer):
-    image_url = serializers.SerializerMethodField()
-
-    class Meta:
-        model = Support
-        fields = ["id", "first_name", "last_name", "phone_number", "password", "image_url", "username"]
-
-    def get_image_url(self, instance):
-        return instance.image.url if instance.image else None
 
 class VideoSerializer(serializers.ModelSerializer):
-    video_url = serializers.SerializerMethodField()
+    status = serializers.CharField(read_only=True)
 
     class Meta:
         model = Video
-        fields = ['id', 'video_url', 'module']
-
-    def get_video_url(self, obj):
-        request = self.context.get('request')
-        if obj.file and request:
-            return request.build_absolute_uri(obj.file.url)
-        return None
+        fields = ['name', 'file', 'status', 'file_size', 'module', 'created_at']
 

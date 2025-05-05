@@ -1,37 +1,17 @@
 from django.urls import path
-from erp.views import *
+from erp import views
 
 urlpatterns = [
-    #categories
-    path('categories/', CategoryViewSet.as_view()),
-    path('categories/<int:course_id>/', CategoryViewSet.as_view()),
-
-    #courses
-    path('courses/<int:category_id>/', CourseViewSet.as_view()),
-
-    #groups
-    path('groups/<int:course_id>/', GroupViewSet.as_view()),
-
-    #modules
-    path('modules/<int:group_id>/', ModuleViewSet.as_view()),
-
-    #homework
-    path('homework/', HomeworkViewSet.as_view({'get': 'list', 'post': 'create'})),
-    path('homework/<int:pk>/', HomeworkViewSet.as_view({'get': 'retrieve', 'put': 'update', 'delete': 'destroy'})),
-
-    #student
-    path('students/', StudentViewSet.as_view({'get': 'list', 'post': 'create'})),
-    path('students/<int:group_id>/', StudentViewSet.as_view({'get': 'list'})),
-
-    #teachers
-    path('teachers/', TeacherViewSet.as_view({'get': 'list', 'post': 'create'})),
-    path('teachers/<int:pk>/', TeacherViewSet.as_view({'get': 'retrieve', 'put': 'update', 'delete': 'destroy'})),
-
-    #supports
-    path('supports/', SupportViewSet.as_view({'get': 'list', 'post': 'create'})),
-    path('supports/<int:pk>/', SupportViewSet.as_view({'get': 'retrieve', 'put': 'update', 'delete': 'destroy'})),
-
-    #video
-    path('videos/', VideoListCReateApiView.as_view(), name='video-list'),
-    path('videos/<int:pk>/', VideoDetailAPiView.as_view(), name='video-by-module'),
+    path('category/create/',views.CategoryListCreateApiView.as_view(),name='create_category'),
+    path('category/detail/<int:pk>/',views.CategoryDetailAPiView.as_view(),name='category_detail'),
+    path('course/create/',views.CourseListCreateApiView.as_view(),name='course_create'),
+    # Student urls
+    path('students/',views.StudentGenericApiView.as_view(),name='students'),
+    path('courses/<int:category_id>/',views.CourseListByCategory.as_view(),name='course_list_by_category'),
+    path('homework/create/',views.HomeworkCreateAPIView.as_view(),name='hmw_create'),
+    path('videos/list/',views.VideoListCReateApiView.as_view(),name='video_create'),
+    path('videos/list/<int:pk>/',views.VideoDetailAPiView.as_view(),),
+# JWT
+path('api/login/', views.LoginView.as_view(), name='login'),
+    path('api/logout/', views.LogoutView.as_view(), name='logout'),
 ]

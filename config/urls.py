@@ -16,8 +16,13 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from erp.custom_oauth_token import CustomAuthToken, LogoutAPIView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include('erp.urls'))
+    path('', include('erp.urls')),
+    # Token
+    path('api-token-auth/', CustomAuthToken.as_view()),
+    path('logout/', LogoutAPIView.as_view()),
+
 ]
