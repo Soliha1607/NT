@@ -9,9 +9,9 @@ urlpatterns = [
     path('students/',views.StudentGenericApiView.as_view(),name='students'),
     path('courses/<int:category_id>/',views.CourseListByCategory.as_view(),name='course_list_by_category'),
     path('homework/create/',views.HomeworkCreateAPIView.as_view(),name='hmw_create'),
-    path('videos/list/',views.VideoListCReateApiView.as_view(),name='video_create'),
+    path('videos/list/',views.VideoListCreateApiView.as_view(),name='video_create'),
     path('videos/list/<int:pk>/',views.VideoDetailAPiView.as_view(),),
-# JWT
-path('api/login/', views.LoginView.as_view(), name='login'),
+    # JWT
+    path('api/login/', views.LoginView.as_view(), name='login'),
     path('api/logout/', views.LogoutView.as_view(), name='logout'),
 ]

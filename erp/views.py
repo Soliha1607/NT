@@ -1,6 +1,8 @@
 import datetime
-from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView, GenericAPIView, ListAPIView, \
-    CreateAPIView, RetrieveUpdateDestroyAPIView
+
+from django.core.cache import cache
+from rest_framework.generics import ListCreateAPIView, GenericAPIView, CreateAPIView, RetrieveUpdateDestroyAPIView, \
+    ListAPIView
 from rest_framework.views import APIView
 from erp.models import Category, Course, Student, Homework, Video
 from .serializers import CategoryModelSerializer, CourseModelSerializer, StudentModelSerializer, HomeworkSerializer, \
@@ -8,9 +10,6 @@ from .serializers import CategoryModelSerializer, CourseModelSerializer, Student
 from django.db.models import Count
 from rest_framework.response import Response
 from rest_framework import permissions, status
-from erp.permissions import CanEditWithinSpecialTime
-from rest_framework.authentication import TokenAuthentication
-from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
@@ -21,10 +20,15 @@ from django.contrib.auth import authenticate
 class CategoryListCreateApiView(ListCreateAPIView):
     queryset = Category.objects.all()
     serializer_class = CategoryModelSerializer
-    permission_classes = [permissions.IsAuthenticated, ]
 
     def get_queryset(self):
+        key = 'categories'
+        queryset = cache.get(key)
+        if queryset:
+            return queryset
+
         queryset = Category.objects.all().annotate(course_count=Count('courses'))
+        cache.set(key, queryset, timeout=None)
         return queryset
 
 
@@ -33,12 +37,28 @@ class CategoryDetailAPiView(RetrieveUpdateDestroyAPIView):
     serializer_class = CategoryModelSerializer
     lookup_field = 'pk'
 
+    def get_queryset(self):
+        key = f'categories-{self.kwargs["pk"]}'
+        queryset = cache.get(key)
+        if queryset:
+            return queryset
+        queryset = Category.objects.filter(courses=self.kwargs['pk'])
+        cache.set(key, queryset, timeout=None)
+        return queryset
+
 
 class CourseListCreateApiView(ListCreateAPIView):
     queryset = Course.objects.all()
     serializer_class = CourseModelSerializer
-    authentication_classes = [TokenAuthentication, ]
-    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        key = f'course'
+        queryset = cache.get(key)
+        if queryset:
+            return queryset
+        queryset = Course.objects.all().select_related('category')
+        cache.set(key, queryset, timeout=None)
+        return queryset
 
 
 class StudentGenericApiView(GenericAPIView):
@@ -46,45 +66,76 @@ class StudentGenericApiView(GenericAPIView):
     serializer_class = StudentModelSerializer
 
     def get(self, request, *args, **kwargs):
+        key = 'students'
+        serializers = cache.get(key)
+        if serializers:
+            return Response(serializers.data, status=status.HTTP_200_OK)
         products = self.get_queryset()
         serializers = self.get_serializer(products, many=True)
+        cache.set(key, serializers, timeout=None)
         return Response(serializers.data)
 
 
-class CourseListByCategory(GenericAPIView):
+class CourseListByCategory(ListAPIView):
     serializer_class = CourseModelSerializer
+    queryset = Course.objects.all()
 
     def get_queryset(self):
         category_id = self.kwargs.get('category_id')
-        if category_id:
-            return Course.objects.filter(category=category_id)
-        return Course.objects.none()
+        key = f'course-{category_id}'
+        queryset = cache.get(key)
+        if queryset:
+            return queryset
+        queryset = Course.objects.filter(category=category_id).select_related('category')
+        cache.set(key, queryset, timeout=None)
+        return queryset
 
-    def get(self, request):
-        students = self.get_queryset()
-        serializers = self.get_serializer(students, many=True)
-        return Response(serializers.data)
 
-
-class HomeworkCreateAPIView(CreateAPIView):
+class HomeworkCreateAPIView(ListCreateAPIView):
     serializer_class = HomeworkSerializer
     queryset = Homework.objects.all()
+
+    def get_queryset(self):
+        key = f'homework'
+        queryset = cache.get(key)
+        if queryset:
+            return queryset
+        queryset = Homework.objects.all().select_related('module')
+        cache.set(key, queryset, timeout=None)
+        return queryset
 
     def perform_create(self, serializer):
         return super().perform_create(serializer)
 
 
-class VideoListCReateApiView(ListCreateAPIView):
+class VideoListCreateApiView(ListCreateAPIView):
     serializer_class = VideoSerializer
     queryset = Video.objects.all()
-    authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        key = f'video'
+        queryset = cache.get(key)
+        if queryset:
+            return queryset
+        queryset = Video.objects.all()
+        cache.set(key, queryset, timeout=None)
+        return queryset
 
 
 class VideoDetailAPiView(RetrieveUpdateDestroyAPIView):
     serializer_class = VideoSerializer
     queryset = Video.objects.all()
-    permission_classes = [CanEditWithinSpecialTime]
+
+    def get_queryset(self):
+        key = f'video-{self.kwargs["pk"]}'
+        queryset = cache.get(key)
+        if queryset:
+            print('kirdi')
+            return queryset
+        queryset = Video.objects.all().select_related('module')
+        cache.set(key, queryset, timeout=None)
+        return queryset
 
 
 class LoginView(APIView):
